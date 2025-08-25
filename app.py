@@ -8,13 +8,20 @@ MODEL_ID = "Nomi78600/gpt2-finetuned-articles"
 # --- MODEL LOADING ---
 @st.cache_resource
 def load_model_and_tokenizer():
-    """Load the tokenizer and model from Hugging Face."""
+    """Load the tokenizer and model from Hugging Face, using a token."""
     try:
-        tokenizer = GPT2Tokenizer.from_pretrained(MODEL_ID)
-        model = GPT2LMHeadModel.from_pretrained(MODEL_ID)
+        # Get the token from Streamlit's secrets
+        token = st.secrets.get("HUGGING_FACE_TOKEN")
+        if not token:
+            st.error("Hugging Face token not found in Streamlit secrets. Please add it to your app's settings.", icon="🚨")
+            return None, None
+            
+        # Pass the token to the from_pretrained method
+        tokenizer = GPT2Tokenizer.from_pretrained(MODEL_ID, token=token)
+        model = GPT2LMHeadModel.from_pretrained(MODEL_ID, token=token)
         return tokenizer, model
     except Exception as e:
-        st.error(f"Error loading model: {e}. Please ensure the repository ID '{MODEL_ID}' is correct and the model is public.")
+        st.error(f"Error loading model: {e}", icon="🚨")
         return None, None
 
 tokenizer, model = load_model_and_tokenizer()
@@ -37,10 +44,7 @@ if model is not None and tokenizer is not None:
 
         if submitted:
             with st.spinner("Generating text..."):
-                # Encode the prompt
                 ids = tokenizer.encode(f'{prompt_text}', return_tensors='pt')
-
-                # Generate text
                 final_outputs = model.generate(
                     ids,
                     do_sample=True,
@@ -49,11 +53,9 @@ if model is not None and tokenizer is not None:
                     top_k=50,
                     top_p=0.95,
                 )
-
-                # Decode and display the output
                 generated_text = tokenizer.decode(final_outputs[0], skip_special_tokens=True)
                 
                 st.subheader("Generated Text:")
                 st.write(generated_text)
 else:
-    st.warning("Model could not be loaded. Please check the repository ID and application logs.")
+    st.warning("Model is not loaded. Please check the app's settings and logs.")
