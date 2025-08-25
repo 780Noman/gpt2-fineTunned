@@ -37,7 +37,7 @@ st.markdown(
 
 if model is not None and tokenizer is not None:
     with st.form("text_generation_form"):
-        prompt_text = st.text_area("Enter your starting text (prompt):", "The price of oil", height=100)
+        prompt_text = st.text_area("Enter your starting text (prompt):", height=100)
         max_length = st.slider("Maximum length of generated text:", min_value=20, max_value=250, value=70)
         
         submitted = st.form_submit_button("Generate Text")
